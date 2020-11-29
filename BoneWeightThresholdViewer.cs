@@ -41,16 +41,21 @@ namespace RainyReignGames
                 skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
             }
 
-            if (skinnedMeshRenderer != null && skinnedMeshRenderer.sharedMesh != null && boneToSplit != null)
+            if (skinnedMeshRenderer != null && skinnedMeshRenderer.sharedMesh != null)
             {
-                if (boneToSplit != previousBone || skinnedMeshRenderer != previousRenderer)
+                if (skinnedMeshRenderer != previousRenderer)
                 {
-                    UpdateData();
+                    UpdateMesh();
+                }
+
+                if(boneToSplit != previousBone)
+                {
+                    UpdateBoneData();
                 }
             }
         }
 
-        void UpdateData()
+        void UpdateMesh()
         {
             Mesh bakedMesh = new Mesh();
             skinnedMeshRenderer.BakeMesh(bakedMesh);
@@ -58,6 +63,11 @@ namespace RainyReignGames
             vertices = bakedMesh.vertices;
             boneWeights = skinnedMeshRenderer.sharedMesh.boneWeights;
 
+            previousRenderer = skinnedMeshRenderer;
+        }
+
+        void UpdateBoneData()
+        {
             List<Transform> bonesToSplit = new List<Transform>();
             if (boneToSplit != null)
             {
@@ -73,8 +83,7 @@ namespace RainyReignGames
                     boneMask[i] = true;
                 }
             }
-
-            previousRenderer = skinnedMeshRenderer;
+            
             previousBone = boneToSplit;
         }
 
@@ -82,18 +91,29 @@ namespace RainyReignGames
         {
             if(vertices != null)
             {
-                for(int i = 0; i < vertices.Length; i++)
+                if (boneToSplit != null)
                 {
-                    if(IsPartOf(boneWeights[i], boneMask, threshold))
+                    for (int i = 0; i < vertices.Length; i++)
                     {
-                        Gizmos.color = Color.red;
-                    }
-                    else
-                    {
-                        Gizmos.color = Color.black;
-                    }
+                        if (IsPartOf(boneWeights[i], boneMask, threshold))
+                        {
+                            Gizmos.color = Color.red;
+                        }
+                        else
+                        {
+                            Gizmos.color = Color.black;
+                        }
 
-                    Gizmos.DrawCube(transform.TransformPoint(vertices[i]), gizmoSize);
+                        Gizmos.DrawCube(transform.TransformPoint(vertices[i]), gizmoSize);
+                    }
+                }
+                else
+                {
+                    Gizmos.color = Color.black;
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        Gizmos.DrawCube(transform.TransformPoint(vertices[i]), gizmoSize);
+                    }
                 }
             }
         }
